@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Planet
 #from models import Person
 
 app = Flask(__name__)
@@ -38,6 +38,49 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@app.route('/planets', methods=['GET'])
+def get_planets():
+    planets = Planet.query.all()
+    planets = list(map(lambda planet: planet.serialize(), planets ))
+    print(planets)
+    return jsonify(planets), 200
+
+@app.route('/planet/<planet_id>', methods=['GET'])
+def get_planet(planet_id):
+    planet = Planet.query.get(planet_id)
+    if isinstance(planet, Planet):
+        return jsonify(planet.internal()), 200
+    else:
+        return jsonify({
+            "message":"planeta no encontrado"
+        })
+
+@app.route('/planet', methods=['POST'])
+def register_planet():
+    """
+    Función con método POST
+    """
+    planet = Planet()
+    body = request.json
+    
+    planet.climate = body["climate"]
+    planet.created = body["created"]
+    planet.diameter= body["diameter"]
+    planet.gravity = body["gravity"]
+    planet.name =body["name"]
+    planet.orbital_period = body["orbital_period"]
+
+    db.session.add(planet)
+    try:        
+        db.session.commit()
+        return jsonify(planet.serialize()), 201
+    except Exception as error:
+        print(error)
+        db.session.rollback()
+        return jsonify({"message":"error"}), 400
+
+
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
