@@ -130,7 +130,7 @@ def get_people():
     return jsonify(people), 200
 
 @app.route('/people/<person_id>', methods=['GET'])
-def person(person_id):
+def Person(person_id):
     person = People.query.get(person_id)
     if isinstance(person, People):
         return jsonify(person.serialize()), 200
